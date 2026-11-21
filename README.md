@@ -44,7 +44,7 @@ This repository hosts the complete deliverables for the Agentic AI Course Projec
 2. **`Agenti AI Report.pdf`**  
    The complete 36-page Faculty Appraisal Management System Project Report covering system analysis, architecture, UML diagrams, module breakdowns, testing results, and output demonstrations.
 
-3. **`Lab_Worklets_1_to_14.pdf`**  
+3. **`Project worklet.pdf`**  
    The consolidated Lab Worklet Review & Evaluation Sheet covering all Hands-on Labs (1 to 14), including the Team Introduction page and the Marks Summary sheet.
 
 ---
