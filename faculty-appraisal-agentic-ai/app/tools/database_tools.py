@@ -45,7 +45,7 @@ def get_validation_results(faculty_id: str, run_id: str) -> dict:
     """Get validation results for a specific appraisal run."""
     try:
         rows = execute_query(
-            "SELECT v.*, e.title, e.category, e.sub_category FROM validation_results v "
+            "SELECT v.*, e.title, e.category, e.sub_category, e.description, e.file_path, e.year FROM validation_results v "
             "JOIN evidence e ON v.evidence_id = e.evidence_id "
             "WHERE v.faculty_id = ? AND v.run_id = ?",
             (faculty_id, run_id)

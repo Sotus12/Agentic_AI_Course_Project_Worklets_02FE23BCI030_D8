@@ -57,6 +57,60 @@ class APICalculationSkill(BaseSkill):
         research_score_data = calc_res.get("result", {})
         research_score = research_score_data.get("score", 0.0)
 
+        # Enrich research breakdown with itemized publication & paper records
+        valid_journals = [
+            {
+                "title": v.get("title"),
+                "journal": v.get("description", "Refereed Journal"),
+                "year": v.get("year") or 2026,
+                "points_earned": 3.0,
+                "status": "VALID",
+            }
+            for v in valid_items if v.get("category") == "research" and v.get("sub_category") == "publication"
+        ]
+        valid_confs = [
+            {
+                "title": v.get("title"),
+                "venue": v.get("description", "International Conference"),
+                "year": v.get("year") or 2026,
+                "points_earned": 4.0,
+                "status": "VALID",
+            }
+            for v in valid_items if v.get("category") == "research" and v.get("sub_category") == "conference"
+        ]
+        valid_patents = [
+            {
+                "title": v.get("title"),
+                "grant_id": v.get("description", "Patent Specification"),
+                "points_earned": 7.0,
+                "status": "VALID",
+            }
+            for v in valid_items if v.get("category") == "research" and v.get("sub_category") == "patent"
+        ]
+        valid_projects = [
+            {
+                "title": v.get("title"),
+                "sponsorship": v.get("description", "Sponsored Research Grant"),
+                "points_earned": 5.0,
+                "status": "VALID",
+            }
+            for v in valid_items if v.get("category") == "research" and v.get("sub_category") == "project"
+        ]
+
+        research_score_data["itemized"] = {
+            "journals": valid_journals,
+            "conferences": valid_confs,
+            "patents": valid_patents,
+            "projects": valid_projects,
+        }
+        research_score_data["summary_counts"] = {
+            "total_papers": len(valid_journals) + len(valid_confs),
+            "journal_publications": len(valid_journals),
+            "conference_proceedings": len(valid_confs),
+            "patents_granted": len(valid_patents),
+            "sponsored_projects": len(valid_projects),
+        }
+
         # Retrieve teaching data from scoped memory or fallback defaults
         teaching_mem = memory.get("teaching_evidence") if memory else None
         teaching_summary = teaching_mem.get("summary", {}) if teaching_mem else {
@@ -70,6 +124,7 @@ class APICalculationSkill(BaseSkill):
         calc_teach = tool_registry.execute("calculate_score", self.allowed_tools, category="teaching", evidence_data=teaching_summary)
         tool_calls_trace.append(calc_teach)
         teaching_score_data = calc_teach.get("result", {})
+        teaching_score_data["summary"] = teaching_summary
         teaching_score = teaching_score_data.get("score", 0.0)
 
         # Aggregate administration counts
@@ -87,6 +142,26 @@ class APICalculationSkill(BaseSkill):
         calc_adm = tool_registry.execute("calculate_score", self.allowed_tools, category="administration", evidence_data=admin_input)
         tool_calls_trace.append(calc_adm)
         admin_score_data = calc_adm.get("result", {})
+        admin_score_data["itemized"] = {
+            "committees": [
+                {"title": v.get("title"), "role": v.get("description", "Member"), "points_earned": 4.0, "status": "VALID"}
+                for v in valid_items if v.get("category") == "administration" and v.get("sub_category") == "committee"
+            ],
+            "coordinator_roles": [
+                {"title": v.get("title"), "scope": v.get("description", "Coordinator"), "points_earned": 6.0, "status": "VALID"}
+                for v in valid_items if v.get("category") == "administration" and v.get("sub_category") == "coordinator_role"
+            ],
+            "activities": [
+                {"title": v.get("title"), "details": v.get("description", "Organizer"), "points_earned": 2.0, "status": "VALID"}
+                for v in valid_items if v.get("category") == "administration" and v.get("sub_category") == "activity"
+            ],
+        }
+        admin_score_data["summary_counts"] = {
+            "committee_count": len(admin_score_data["itemized"]["committees"]),
+            "coordinator_count": len(admin_score_data["itemized"]["coordinator_roles"]),
+            "activity_count": len(admin_score_data["itemized"]["activities"]),
+            "total_admin_engagements": len(admin_score_data["itemized"]["committees"]) + len(admin_score_data["itemized"]["coordinator_roles"]) + len(admin_score_data["itemized"]["activities"]),
+        }
         admin_score = admin_score_data.get("score", 0.0)
 
         total_score = round(research_score + teaching_score + admin_score, 2)

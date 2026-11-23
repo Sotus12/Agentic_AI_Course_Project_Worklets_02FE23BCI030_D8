@@ -63,6 +63,13 @@ def _generate_pure_pdf(report_data: dict, faculty_id: str, run_id: str, filepath
         "----------------------------------------------------------------------",
         f"Validation: VALID={validation.get('VALID', 0)}, INVALID={validation.get('INVALID', 0)}, REVIEW={validation.get('NEEDS_REVIEW', 0)}",
     ]
+
+    res_counts = report_data.get("detailed_breakdown", {}).get("research", {}).get("summary_counts", {})
+    if res_counts:
+        lines.append("----------------------------------------------------------------------")
+        lines.append(f"Research Output: Total Papers={res_counts.get('total_papers', 0)} (Journals={res_counts.get('journal_publications', 0)}, Conferences={res_counts.get('conference_proceedings', 0)})")
+        lines.append(f"Innovation & Grants: Patents={res_counts.get('patents_granted', 0)}, Projects={res_counts.get('sponsored_projects', 0)}")
+
     if comparison:
         lines.append(f"Comparison with Previous: Prev={comparison.get('previous_score', 'N/A')}, Diff={comparison.get('difference', 'N/A')}")
     if warnings:
@@ -167,7 +174,21 @@ def generate_pdf(report_data: dict, faculty_id: str, run_id: str) -> dict:
         pdf.set_font("Helvetica", "B", 11)
         pdf.cell(60, 8, "Total:", new_x="RIGHT", new_y="TOP")
         pdf.cell(0, 8, f"{total} / {max_total}", new_x="LMARGIN", new_y="NEXT")
-        pdf.ln(5)
+        pdf.ln(4)
+
+        # Scholarship & Output Breakdown
+        res_counts = report_data.get("detailed_breakdown", {}).get("research", {}).get("summary_counts", {})
+        if res_counts:
+            pdf.set_font("Helvetica", "B", 12)
+            pdf.cell(0, 7, "Research & Scholarship Output", new_x="LMARGIN", new_y="NEXT")
+            pdf.set_font("Helvetica", "", 10)
+            pdf.cell(70, 6, "Total Research Papers:", new_x="RIGHT", new_y="TOP")
+            pdf.cell(0, 6, f"{res_counts.get('total_papers', 0)} (Journals: {res_counts.get('journal_publications', 0)}, Conferences: {res_counts.get('conference_proceedings', 0)})", new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(70, 6, "Patents Granted / Filed:", new_x="RIGHT", new_y="TOP")
+            pdf.cell(0, 6, str(res_counts.get('patents_granted', 0)), new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(70, 6, "Sponsored R&D Projects:", new_x="RIGHT", new_y="TOP")
+            pdf.cell(0, 6, str(res_counts.get('sponsored_projects', 0)), new_x="LMARGIN", new_y="NEXT")
+            pdf.ln(3)
 
         # Validation Summary
         validation = report_data.get("validation_summary", {})

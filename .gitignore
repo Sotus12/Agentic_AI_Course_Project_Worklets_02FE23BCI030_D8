@@ -26,10 +26,14 @@ wheels/
 venv/
 ENV/
 
-# Testing
+# Testing & temporary
 .pytest_cache/
 .coverage
 htmlcov/
+*.pptx
+*.db
+faculty-appraisal-agentic-ai/reports/appraisal_*.json
+faculty-appraisal-agentic-ai/reports/appraisal_*.pdf
 
 # Editor & OS files
 .vscode/
